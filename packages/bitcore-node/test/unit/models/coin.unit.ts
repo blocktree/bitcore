@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { CoinModel, ICoin, SpentHeightIndicators } from '../../../src/models/coin';
+import { CoinStorage, ICoin } from '../../../src/models/coin';
+import { SpentHeightIndicators } from '../../../src/types/Coin';
 import { ObjectId } from 'mongodb';
 
 describe('Coin Model', function() {
@@ -22,19 +23,21 @@ describe('Coin Model', function() {
         spentHeight: SpentHeightIndicators.unspent
       } as ICoin;
 
-      const result = CoinModel._apiTransform(coin, { object: false });
+      const result = CoinStorage._apiTransform(coin, { object: false });
 
       const parseResult = JSON.parse(result.toString());
       expect(parseResult).to.deep.equal({
         _id: id.toHexString(),
-        txid: '81f24ac62a6ffb634b74e6278997f0788f3c64e844453f8831d2a526dc3ecb13',
         mintTxid: '81f24ac62a6ffb634b74e6278997f0788f3c64e844453f8831d2a526dc3ecb13',
         mintHeight: 1,
-        vout: 0,
+        network: 'regtest',
+        confirmations: -1,
+        mintIndex: 0,
+        chain: 'BTC',
         spentTxid: '',
         address: 'n1ojJtS98D2VRLcTkaHH4YXLG4ytCyS7AL',
         coinbase: true,
-        script: coin.script.toJSON(),
+        script: '',
         spentHeight: SpentHeightIndicators.unspent,
         value: 5000000000.0
       });
@@ -57,19 +60,20 @@ describe('Coin Model', function() {
         spentHeight: SpentHeightIndicators.unspent
       } as ICoin;
 
-      const result = CoinModel._apiTransform(coin, { object: true });
+      const result = CoinStorage._apiTransform(coin, { object: true });
       expect(result).to.deep.equal({
-        _id: id,
-        txid: '81f24ac62a6ffb634b74e6278997f0788f3c64e844453f8831d2a526dc3ecb13',
+        _id: id.toHexString(),
         mintTxid: '81f24ac62a6ffb634b74e6278997f0788f3c64e844453f8831d2a526dc3ecb13',
-        vout: 0,
+        network: 'regtest',
+        chain: 'BTC',
         spentTxid: '',
         mintHeight: 1,
+        mintIndex: 0,
         spentHeight: SpentHeightIndicators.unspent,
         address: 'n1ojJtS98D2VRLcTkaHH4YXLG4ytCyS7AL',
         coinbase: true,
-        confirmations: undefined,
-        script: coin.script,
+        confirmations: -1,
+        script: '',
         value: 5000000000.0
       });
     });

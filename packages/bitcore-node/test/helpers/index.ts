@@ -1,18 +1,18 @@
 import * as sinon from 'sinon';
-import { BlockModel } from '../../src/models/block';
-import { TransactionModel } from '../../src/models/transaction';
-import { CoinModel } from '../../src/models/coin';
-import { WalletAddressModel } from '../../src/models/walletAddress';
-import { WalletModel } from '../../src/models/wallet';
+import { BlockStorage } from '../../src/models/block';
+import { TransactionStorage } from '../../src/models/transaction';
+import { CoinStorage } from '../../src/models/coin';
+import { WalletAddressStorage } from '../../src/models/walletAddress';
+import { WalletStorage } from '../../src/models/wallet';
 import { Storage } from '../../src/services/storage';
 import { BaseModel } from '../../src/models/base';
 
 export async function resetDatabase() {
-  await resetModel(BlockModel);
-  await resetModel(TransactionModel);
-  await resetModel(CoinModel);
-  await resetModel(WalletAddressModel);
-  await resetModel(WalletModel);
+  await resetModel(BlockStorage);
+  await resetModel(TransactionStorage);
+  await resetModel(CoinStorage);
+  await resetModel(WalletAddressStorage);
+  await resetModel(WalletStorage);
 }
 
 export async function resetModel(model: BaseModel<any>) {
@@ -34,7 +34,8 @@ export function mockCollection(toReturn, collectionMethods = {}) {
       findOne: sinon.stub().resolves(toReturn),
       update: sinon.stub().resolves({ result: toReturn }),
       updateOne: sinon.stub().resolves(toReturn),
-      updateMany: sinon.stub().resolves({ nModified: 1 })
+      updateMany: sinon.stub().resolves({ nModified: 1 }),
+      addCursorFlag: sinon.stub().returnsThis()
     },
     collectionMethods
   );

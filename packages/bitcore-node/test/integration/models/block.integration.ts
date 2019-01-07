@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import { resetDatabase } from '../../helpers';
-import { BlockModel } from '../../../src/models/block';
-import { TransactionModel } from '../../../src/models/transaction';
-import { CoinModel, SpentHeightIndicators } from '../../../src/models/coin';
+import { BlockStorage } from '../../../src/models/block';
+import { TransactionStorage } from '../../../src/models/transaction';
+import { CoinStorage } from '../../../src/models/coin';
 import { TEST_BLOCK } from '../../data/test-block';
+import { SpentHeightIndicators } from '../../../src/types/Coin';
 import logger from '../../../src/logger';
 
 describe('Block Model', function() {
@@ -13,7 +14,7 @@ describe('Block Model', function() {
 
   describe('addBlock', () => {
     it('should add a block when incoming block references previous block hash', async () => {
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 5,
@@ -31,7 +32,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 6,
@@ -49,7 +50,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 7,
@@ -67,7 +68,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 8,
@@ -86,9 +87,9 @@ describe('Block Model', function() {
         processed: true
       });
 
-      await BlockModel.addBlock({ block: TEST_BLOCK, chain: 'BTC', network: 'regtest', initialSyncComplete: false });
+      await BlockStorage.addBlock({ block: TEST_BLOCK, chain: 'BTC', network: 'regtest', initialSyncComplete: false });
 
-      const blocks = await BlockModel.collection
+      const blocks = await BlockStorage.collection
         .find({ chain: 'BTC', network: 'regtest' })
         .sort({ height: 1 })
         .toArray();
@@ -111,7 +112,7 @@ describe('Block Model', function() {
 
       logger.info(`new block was successfully added with hash`, ownBlock.hash);
 
-      const transaction = await TransactionModel.collection
+      const transaction = await TransactionStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest',
@@ -136,7 +137,7 @@ describe('Block Model', function() {
 
   describe('handleReorg', () => {
     it("should not reorg if the incoming block's prevHash matches the block hash of the current highest block", async () => {
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 1335,
@@ -154,7 +155,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 1336,
@@ -172,7 +173,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 1337,
@@ -191,7 +192,7 @@ describe('Block Model', function() {
         processed: true
       });
 
-      await BlockModel.handleReorg({
+      await BlockStorage.handleReorg({
         header: {
           prevHash: '3279069d22ce5af68ef38332d5b40e79e1964b154d466e7fa233015a34c27312',
           hash: '12c719927ce18f9a61d7c5a7af08d3110cacfa43671aa700956c3c05ed38bdaa',
@@ -205,11 +206,11 @@ describe('Block Model', function() {
         network: 'regtest'
       });
 
-      const result = await BlockModel.collection.find({ chain: 'BTC', network: 'regtest' }).toArray();
+      const result = await BlockStorage.collection.find({ chain: 'BTC', network: 'regtest' }).toArray();
       expect(result.length).to.equal(3);
     });
     it('should not reorg if localTip height is zero', async () => {
-      await BlockModel.handleReorg({
+      await BlockStorage.handleReorg({
         header: {
           prevHash: '12c719927ce18f9a61d7c5a7af08d3110cacfa43671aa700956c3c05ed38bdaa',
           hash: '4c6872bf45ecab2fb8b38c8b8f50fc4a8309c6171d28d479b8226afcb1a99920',
@@ -223,12 +224,12 @@ describe('Block Model', function() {
         network: 'regtest'
       });
 
-      const result = await BlockModel.collection.find({ chain: 'BTC', network: 'regtest' }).toArray();
+      const result = await BlockStorage.collection.find({ chain: 'BTC', network: 'regtest' }).toArray();
       expect(result.length).to.equal(0);
     });
     it('should successfully handle reorg', async () => {
       // setting the Block model
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 5,
@@ -246,7 +247,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 6,
@@ -264,7 +265,7 @@ describe('Block Model', function() {
         bits: parseInt('207fffff', 16),
         processed: true
       });
-      await BlockModel.collection.insertOne({
+      await BlockStorage.collection.insertOne({
         chain: 'BTC',
         network: 'regtest',
         height: 7,
@@ -284,7 +285,7 @@ describe('Block Model', function() {
       });
 
       // setting TX model
-      await TransactionModel.collection.insertOne({
+      await TransactionStorage.collection.insertOne({
         txid: 'a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919g',
         chain: 'BTC',
         network: 'regtest',
@@ -295,11 +296,13 @@ describe('Block Model', function() {
         coinbase: true,
         locktime: 0,
         size: 145,
+        inputCount: 1,
+        outputCount: 1,
         wallets: [],
         blockHeight: 5
       });
 
-      await TransactionModel.collection.insertOne({
+      await TransactionStorage.collection.insertOne({
         txid: '8c29860888b915715878b21ce14707a17b43f6c51dfb62a1e736e35bc5d8093f',
         chain: 'BTC',
         network: 'regtest',
@@ -310,11 +313,13 @@ describe('Block Model', function() {
         coinbase: true,
         locktime: 0,
         size: 145,
+        inputCount: 1,
+        outputCount: 1,
         wallets: [],
         blockHeight: 6
       });
 
-      await TransactionModel.collection.insertOne({
+      await TransactionStorage.collection.insertOne({
         txid: 'a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919e',
         chain: 'BTC',
         network: 'regtest',
@@ -325,11 +330,13 @@ describe('Block Model', function() {
         coinbase: true,
         locktime: 0,
         size: 145,
+        inputCount: 1,
+        outputCount: 1,
         wallets: [],
         blockHeight: 7
       });
 
-      await TransactionModel.collection.insertOne({
+      await TransactionStorage.collection.insertOne({
         txid: '8a351fa9fc3fcd38066b4bf61a8b5f71f08aa224d7a86165557e6da7ee13a826',
         chain: 'BTC',
         network: 'regtest',
@@ -340,12 +347,14 @@ describe('Block Model', function() {
         coinbase: true,
         locktime: 0,
         size: 145,
+        inputCount: 1,
+        outputCount: 1,
         wallets: [],
         blockHeight: 7
       });
 
       // setting the Coin model
-      await CoinModel.collection.insertOne({
+      await CoinStorage.collection.insertOne({
         network: 'regtest',
         chain: 'BTC',
         mintTxid: 'a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919g',
@@ -360,7 +369,7 @@ describe('Block Model', function() {
         address: 'mkjB6LmjiNfJWgH4aP4v1GkFjRcQTfDSfj'
       });
 
-      await CoinModel.collection.insertOne({
+      await CoinStorage.collection.insertOne({
         network: 'regtest',
         chain: 'BTC',
         mintTxid: 'a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919e',
@@ -374,7 +383,7 @@ describe('Block Model', function() {
         value: 500.0,
         address: 'mkjB6LmjiNfJWgH4aP4v1GkFjRcQTfDSfj'
       });
-      await CoinModel.collection.insertOne({
+      await CoinStorage.collection.insertOne({
         network: 'regtest',
         chain: 'BTC',
         mintTxid: '8a351fa9fc3fcd38066b4bf61a8b5f71f08aa224d7a86165557e6da7ee13a826',
@@ -388,7 +397,7 @@ describe('Block Model', function() {
         value: 500.0,
         address: 'mkjB6LmjiNfJWgH4aP4v1GkFjRcQTfDSfj'
       });
-      await CoinModel.collection.insertOne({
+      await CoinStorage.collection.insertOne({
         network: 'regtest',
         chain: 'BTC',
         mintTxid: '8c29860888b915715878b21ce14707a17b43f6c51dfb62a1e736e35bc5d8093f',
@@ -403,7 +412,7 @@ describe('Block Model', function() {
         spentTxid: 'eec8570a0c960b19fa6c86c71a06ebda379b86b5fe0be0e64ba83b2e0a3d05a3'
       });
 
-      await BlockModel.handleReorg({
+      await BlockStorage.handleReorg({
         header: {
           prevHash: '2a883ff89c7d6e9302bb4a4634cd580319a4fd59d69e979b344972b0ba042b86',
           hash: '3279069d22ce5af68ef38332d5b40e79e1964b154d466e7fa233015a34c27312',
@@ -418,7 +427,7 @@ describe('Block Model', function() {
       });
 
       // check for removed block after Reorg in db
-      const blocks = await BlockModel.collection
+      const blocks = await BlockStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest'
@@ -426,7 +435,7 @@ describe('Block Model', function() {
         .toArray();
       expect(blocks.length).to.equal(1);
 
-      const removedBlock = await BlockModel.collection
+      const removedBlock = await BlockStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest',
@@ -438,7 +447,7 @@ describe('Block Model', function() {
       expect(removedBlock.length).to.equal(0);
 
       // check for removed tx after Reorg in db
-      const transaction = await TransactionModel.collection
+      const transaction = await TransactionStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest'
@@ -446,7 +455,7 @@ describe('Block Model', function() {
         .toArray();
       expect(transaction.length).to.equal(1);
 
-      const removedTransaction = await TransactionModel.collection
+      const removedTransaction = await TransactionStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest',
@@ -458,7 +467,7 @@ describe('Block Model', function() {
       expect(removedTransaction.length).to.equal(0);
 
       // check for removed coin after Reorg in db
-      const coinModel = await CoinModel.collection
+      const coinModel = await CoinStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest'
@@ -466,7 +475,7 @@ describe('Block Model', function() {
         .toArray();
       expect(coinModel.length).to.equal(1);
 
-      const removedCoin = await CoinModel.collection
+      const removedCoin = await CoinStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest',
@@ -478,7 +487,7 @@ describe('Block Model', function() {
       expect(removedCoin.length).to.equal(0);
 
       // check for unspent coins in the db
-      const unspentCoins = await CoinModel.collection
+      const unspentCoins = await CoinStorage.collection
         .find({
           chain: 'BTC',
           network: 'regtest',
@@ -488,7 +497,7 @@ describe('Block Model', function() {
       expect(unspentCoins.length).equal(1);
       expect(unspentCoins[0].chain).to.equal('BTC');
       expect(unspentCoins[0].network).to.equal('regtest');
-      expect(unspentCoins[0].mintTxid).to.equal('a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919g'),
+      expect(unspentCoins[0].mintTxid).to.equal('a2262b524615b6d2f409784ceff898fd46bdde6a584269788c41f26ac4b4919g');
       expect(unspentCoins[0].mintIndex).to.equal(0);
       expect(unspentCoins[0].mintHeight).to.equal(5);
       expect(unspentCoins[0].coinbase).to.equal(true);

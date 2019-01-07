@@ -2,20 +2,21 @@ import { BaseModel } from './base';
 import { ITransaction } from './transaction';
 import { IBlock } from '../types/Block';
 import { ICoin } from './coin';
+import { StorageService } from '../services/storage';
 
 export namespace IEvent {
-  export type BlockEvent = Partial<IBlock>;
-  export type TxEvent = Partial<ITransaction>;
-  export type CoinEvent = { coin: Partial<ICoin>; address: string };
+  export type BlockEvent = IBlock;
+  export type TxEvent = ITransaction;
+  export type CoinEvent = { coin: ICoin; address: string };
 }
 interface IEvent {
   payload: IEvent.BlockEvent | IEvent.TxEvent | IEvent.CoinEvent;
   type: 'block' | 'tx' | 'coin';
   emitTime: Date;
 }
-class Event extends BaseModel<IEvent> {
-  constructor() {
-    super('events');
+export class EventModel extends BaseModel<IEvent> {
+  constructor(storage?: StorageService) {
+    super('events', storage);
   }
 
   allowedPaging = [];
@@ -42,15 +43,15 @@ class Event extends BaseModel<IEvent> {
   }
 
   public getBlockTail(lastSeen: Date) {
-    return this.collection.find({ type: 'block', emitTime: { $gte: lastSeen } });
+    return this.collection.find({ type: 'block', emitTime: { $gte: lastSeen } }).addCursorFlag('noCursorTimeout', true);
   }
 
   public getTxTail(lastSeen: Date) {
-    return this.collection.find({ type: 'tx', emitTime: { $gte: lastSeen } });
+    return this.collection.find({ type: 'tx', emitTime: { $gte: lastSeen } }).addCursorFlag('noCursorTimeout', true);
   }
 
   getCoinTail(lastSeen: Date) {
-    return this.collection.find({ type: 'coin', emitTime: { $gte: lastSeen } });
+    return this.collection.find({ type: 'coin', emitTime: { $gte: lastSeen } }).addCursorFlag('noCursorTimeout', true);
   }
 }
-export const EventModel = new Event();
+export const EventStorage = new EventModel();
