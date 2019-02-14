@@ -1,0 +1,16 @@
+<loader *ngIf="loading" [type]="'tx-list'"></loader>
+
+<div *ngIf="!loading">
+  <ion-grid>
+    <ion-row *ngFor="let coin of coins; let i = index">
+      <ion-col col-12 *ngIf="i < limit">
+        <coin [coin]="coin"></coin>
+      </ion-col>
+    </ion-row>
+    <ion-row *ngIf="limit < coins.length">
+      <ion-col col-12 text-center>
+        <button ion-button small (click)="loadMore()">Load More</button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</div>

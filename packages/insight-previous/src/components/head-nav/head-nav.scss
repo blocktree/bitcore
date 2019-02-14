@@ -1,0 +1,14 @@
+head-nav {
+  ion-title {
+    &.logo-header {
+      .toolbar-title{
+        width: auto;
+        cursor: pointer;
+        color: white;
+        font-weight: 700;
+        font-style: italic;
+        font-size: 2em;
+      }
+    }
+  }
+}

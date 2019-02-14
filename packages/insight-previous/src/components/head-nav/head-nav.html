@@ -1,0 +1,24 @@
+<ion-header>
+  <ion-navbar color="brand" hideBackButton>
+    <ion-title (click)="goHome()" class="logo-header">insight</ion-title>
+    <ion-buttons end>
+      <button ion-button (click)="changeCurrency($event)">
+        <ion-icon name="logo-bitcoin" *ngIf="currency.currencySymbol !== 'USD'"></ion-icon>
+        <ion-icon name="logo-usd" *ngIf="currency.currencySymbol === 'USD'"></ion-icon>
+        &nbsp;
+        {{ currency?.currencySymbol }}
+        &nbsp;
+        <i>( <span *ngIf="currency.currencySymbol === 'USD'">{{ config?.chain }} - </span> {{ config?.network }})</i>
+      </button>
+      <button ion-button icon-only (click)="toggleSearch()">
+        <ion-icon name="search" [color]="!showSearch ? 'light' : 'dark'"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+
+  <ion-toolbar [hidden]="!showSearch">
+    <form (ngSubmit)="search($event)">
+      <ion-searchbar placeholder="{{ 'Search for block, transaction or address' }}" [(ngModel)]="q" name="search"></ion-searchbar>
+    </form>
+  </ion-toolbar>
+</ion-header>
